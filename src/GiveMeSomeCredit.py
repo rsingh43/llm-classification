@@ -144,11 +144,11 @@ def save_dataframe(df, filename, append=False, index=True, suppress_logs=False):
 			logger.info(f"Saved DataFrame to processed directory: {path}")
 
 
-def load_dataframe(filename: str, header=None, index_col=0):
+def load_dataframe(filename, header=None, index_col=0, nrows=None):
 	path = _get_processed_path(filename)
 	if not os.path.exists(path):
 		raise FileNotFoundError(f"File not found in processed directory: {path}")
-	return pd.read_csv(path, header=header, index_col=index_col)
+	return pd.read_csv(path, header=header, index_col=index_col, nrows=nrows)
 
 
 # --- Create and Save Evaluation Splits ---
@@ -167,22 +167,28 @@ def create_and_return_result_splits(suppress_logs=False):
 	training_ids = sorted(training_ids)
 	validation_ids = sorted(validation_ids)
 
-	train_split_df = df.loc[training_ids, ["SeriousDlqin2yrs"]]
-	validation_split_df = df.loc[validation_ids, ["SeriousDlqin2yrs"]]
+	#training_split_df = df.loc[training_ids, ["SeriousDlqin2yrs"]]
+	#validation_split_df = df.loc[validation_ids, ["SeriousDlqin2yrs"]]
 
-	train_split_df.index.name = "ID"
-	validation_split_df.index.name = "ID"
+	#training_split_df.index.name = "ID"
+	#validation_split_df.index.name = "ID"
 
-	multi_columns = pd.MultiIndex.from_tuples([
-		("target", "SeriousDlqin2yrs")
-	])
-	train_split_df.columns = multi_columns
-	validation_split_df.columns = multi_columns
+	#multi_columns = pd.MultiIndex.from_tuples([
+	#	("target", "SeriousDlqin2yrs")
+	#])
+	#training_split_df.columns = multi_columns
+	#validation_split_df.columns = multi_columns
+
+	training_split_df = pd.DataFrame(index=training_ids)
+	validation_split_df = pd.DataFrame(index=validation_ids)
 	
-	save_dataframe(train_split_df, TRAINING_RESULTS_BASENAME, suppress_logs=suppress_logs)
+	training_split_df.index.name = "Row ID"
+	validation_split_df.index.name = "Row ID"
+	
+	save_dataframe(training_split_df, TRAINING_RESULTS_BASENAME, suppress_logs=suppress_logs)
 	save_dataframe(validation_split_df, VALIDATION_RESULTS_BASENAME, suppress_logs=suppress_logs)
 
-	return train_split_df, validation_split_df
+	return training_split_df, validation_split_df
 
 
 # --- Load Training/Validation Result Files ---
@@ -193,35 +199,38 @@ def ensure_results_exist():
 			training_exists = os.path.exists(get_training_results_path())
 			validation_exists = os.path.exists(get_validation_results_path())
 
-			if training_exists and validation_exists:
-				return func(*args, **kwargs)
-			elif not training_exists and not validation_exists:
+			if not training_exists and not validation_exists:
 				create_and_return_result_splits()
-				return func(*args, **kwargs)
-			else:
+			elif training_exists != validation_exists:
 				raise FileNotFoundError(
 					f"File existence mismatch: {get_training_results_path()} exists: {training_exists}, "
 					f"{get_validation_results_path()} exists: {validation_exists}. "
 					"Both files must either exist or not exist."
 				)
+
+			return func(*args, **kwargs)
 		return wrapper
 	return decorator
 
 @ensure_results_exist()
 def load_training_results():
-	return load_dataframe(TRAINING_RESULTS_BASENAME, header=[0, 1], index_col=0)
+	tmp_df =  load_dataframe(TRAINING_RESULTS_BASENAME, header=None, index_col=None, nrows=0)
+	header = 0 if len(tmp_df.columns) == 1 else [0,1]
+	return load_dataframe(TRAINING_RESULTS_BASENAME, header=header, index_col=0)
 
 @ensure_results_exist()
 def load_validation_results():
-	return load_dataframe(VALIDATION_RESULTS_BASENAME, header=[0, 1], index_col=0)
+	tmp_df =  load_dataframe(VALIDATION_RESULTS_BASENAME, header=None, index_col=None, nrows=0)
+	header = 0 if len(tmp_df.columns) == 1 else [0,1]
+	return load_dataframe(VALIDATION_RESULTS_BASENAME, header=header, index_col=0)
 
 
 # --- Return Evaluation Indicies ---
-def get_training_ids():
+def get_training_row_ids():
 	training_results_df = load_training_results()
 	return training_results_df.index.tolist()
 
-def get_validation_ids():
+def get_validation_row_ids():
 	validation_results_df = load_validation_results()
 	return validation_results_df.index.tolist()
 
@@ -251,20 +260,63 @@ def _group_columns(columns):
 			new_columns.extend(sub_columns)
 	return new_columns
 
-def _update_results_df(training_df, validation_df, results_df, model):
-	training_df = training_df.copy()
-	validation_df = validation_df.copy()
+def _ensure_multilevel(df, inplace=False):
+	if not inplace:
+		df = df.copy()
+	if not isinstance(df.columns, pd.MultiIndex):
+		df.columns = pd.MultiIndex.from_arrays([df.columns])
+	return df
 
-	if not isinstance(results_df.columns, pd.MultiIndex):
-		results_df.columns = pd.MultiIndex.from_product([[model], results_df.columns])
-	else:
-		if results_df.columns.nlevels == 1:
-			results_df.columns = pd.MultiIndex.from_product([[model], results_df.columns])
-		elif results_df.columns.levels[0].dtype != object or model not in results_df.columns.levels[0]:
-			new_tuples = [(model,) + column if isinstance(column, tuple) else (model, column) for column in results_df.columns]
-			results_df.columns = pd.MultiIndex.from_tuples(new_tuples)
+def _add_top_level_column(df, name, inplace=False):
+	df = _ensure_multilevel(df, inplace=inplace)
 
-	results_ids = set(results_df.index)
+	df.columns = pd.MultiIndex.from_tuples([
+		(name,) + col
+		for col in df.columns
+	])
+
+	return df
+
+def _pad_levels(df, max_levels, inplace=False, pad_name_template="new_level_{}"):
+	if not inplace:
+		df = df.copy()
+
+	current_levels = df.columns.nlevels
+	n_to_add = max_levels - current_levels
+
+	if n_to_add > 0:
+		existing_arrays = [
+			df.columns.get_level_values(i)
+			for i in range(current_levels)
+		]
+		new_arrays = [
+			[pad_name_template.format(i+1)] * len(df.columns)
+			for i in range(n_to_add)
+		]
+		all_arrays = existing_arrays + new_arrays
+		df.columns = pd.MultiIndex.from_arrays(all_arrays)
+
+	return df
+
+def _normalize_multiindex(*dfs, inplace=False):
+	dfs = [
+		_ensure_multilevel(df, inplace=inplace)
+		for df in dfs
+	]
+	max_levels = max(df.columns.nlevels for df in dfs)
+	dfs = [
+		_pad_levels(df, max_levels, inplace=inplace)
+		for df in dfs
+	]
+	return dfs if len(dfs) > 1 else dfs[0]
+
+
+def _update_results_df(training_df, validation_df, new_results_df, inplace=False):
+	if not inplace:
+		training_df = training_df.copy()
+		validation_df = validation_df.copy()
+	
+	results_ids = set(new_results_df.index)
 	training_ids = set(training_df.index)
 	validation_ids = set(validation_df.index)
 
@@ -277,19 +329,27 @@ def _update_results_df(training_df, validation_df, results_df, model):
 		raise ValueError(f"IDs not found in either training or validation sets: {not_found}")
 
 	def ensure_columns(df, columns):
-		missing_cols = [column for column in columns if column not in df.columns]
+		missing_cols = [
+			column for column in columns
+			if column not in df.columns
+		]
 		for column in missing_cols:
+			print("column: ", column)
 			df[column] = pd.NA
 
-	train_ids_in_results = list(results_ids & training_ids)
-	if train_ids_in_results:
-		ensure_columns(training_df, results_df.columns)
-		training_df.loc[train_ids_in_results, results_df.columns] = results_df.loc[train_ids_in_results]
+	training_ids_in_results = list(results_ids & training_ids)
+	if training_ids_in_results:
+		ensure_columns(training_df, new_results_df.columns)
+		training_df.loc[
+			training_ids_in_results, new_results_df.columns
+		] = new_results_df.loc[training_ids_in_results]
 
-	valid_ids_in_results = list(results_ids & validation_ids)
-	if valid_ids_in_results:
-		ensure_columns(validation_df, results_df.columns)
-		validation_df.loc[valid_ids_in_results, results_df.columns] = results_df.loc[valid_ids_in_results]
+	validation_ids_in_results = list(results_ids & validation_ids)
+	if validation_ids_in_results:
+		ensure_columns(validation_df, new_results_df.columns)
+		validation_df.loc[
+			validation_ids_in_results, new_results_df.columns
+		] = new_results_df.loc[validation_ids_in_results]
 
 	training_df = training_df[_group_columns(training_df.columns)]
 	validation_df = validation_df[_group_columns(validation_df.columns)]
@@ -297,12 +357,17 @@ def _update_results_df(training_df, validation_df, results_df, model):
 
 
 # --- Append Model Results to Processed Files ---
-def save_train_validation_results(model, results_df, suppress_logs=False):
+def save_train_validation_results(model, new_results_df, suppress_logs=False):
 	training_df = load_training_results()
 	validation_df = load_validation_results()
+	new_results_df = _add_top_level_column(new_results_df, model, inplace=False)
+
+	_normalize_multiindex(
+		training_df, validation_df, new_results_df, inplace=True
+	)
 
 	updated_training_df, updated_validation_df = _update_results_df(
-		training_df, validation_df, results_df, model
+		training_df, validation_df, new_results_df
 	)
 
 	save_dataframe(updated_training_df, TRAINING_RESULTS_BASENAME, suppress_logs=suppress_logs)

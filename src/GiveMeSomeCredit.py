@@ -411,7 +411,7 @@ def load_classification_responses():
 	except FileNotFoundError:
 		return pd.DataFrame(
 			columns=[
-				"Sample ID", "Model", "Description ID", "Question ID",
+				"Row ID", "Model", "Description Column", "Classification Question ID",
 				"Prediction", "Yes Probability", "No Probability"
 			]
 		)

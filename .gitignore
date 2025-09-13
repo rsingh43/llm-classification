@@ -205,3 +205,12 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Raw GiveMeSomeCredit dataset (Kaggle competition)
+# Do NOT commit the original CSVs to avoid violating data sharing rules
+data/GiveMeSomeCredit/GiveMeSomeCredit.zip
+data/GiveMeSomeCredit/processed/data_descriptions.csv
+data/GiveMeSomeCredit/raw/Data Dictionary.xls
+data/GiveMeSomeCredit/raw/cs-test.csv
+data/GiveMeSomeCredit/raw/cs-training.csv
+data/GiveMeSomeCredit/raw/sampleEntry.csv

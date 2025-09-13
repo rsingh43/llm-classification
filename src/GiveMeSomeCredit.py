@@ -334,7 +334,6 @@ def _update_results_df(training_df, validation_df, new_results_df, inplace=False
 			if column not in df.columns
 		]
 		for column in missing_cols:
-			print("column: ", column)
 			df[column] = pd.NA
 
 	training_ids_in_results = list(results_ids & training_ids)

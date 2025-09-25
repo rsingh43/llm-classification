@@ -3,7 +3,7 @@ import os
 import dotenv
 dotenv.load_dotenv()
 
-from zip_utils import extract_updated
+from . import zip_utils
 
 def download_competition_dataset(competition, dataset_dir, unzip=True, force=False):
 	from kaggle.api.kaggle_api_extended import KaggleApi 
@@ -26,7 +26,7 @@ def download_competition_dataset(competition, dataset_dir, unzip=True, force=Fal
 		if unzip:
 			if os.path.exists(dataset_zip):
 				print(f"Extracting dataset to: {raw_dir} ...")
-				extract_updated(dataset_zip, raw_dir, force)
+				zip_utils.extract_zip(dataset_zip, raw_dir, force)
 			else:
 				raise FileNotFoundError("Expected ZIP file was not found after download.")
 

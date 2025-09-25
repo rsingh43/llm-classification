@@ -3,7 +3,7 @@ import os
 import time
 import zipfile
 
-def extract_updated(zip_filename, extract_to, force=False):
+def extract_zip(zip_filename, extract_to, force=False):
 	with zipfile.ZipFile(zip_filename, "r") as zip_fp:
 		for item in zip_fp.infolist():
 			extracted_path = os.path.normpath(os.path.join(extract_to, item.filename))

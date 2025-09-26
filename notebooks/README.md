@@ -22,83 +22,67 @@ These notebooks provide a step-by-step guide through the project workflow, from 
 
 Before running any notebooks, you need to set up your Kaggle and Hugging Face API tokens. For instructions on how to obtain and configure your tokens, see the following sections:
 
-* [Kaggle API Setup Instructions](#kaggle-api-setup-instructions)
-* [Hugging Face Token Setup Instructions](#hugging-face-token-setup-instructions)
+* [Kaggle API Authentication](#kaggle-api-authentication)
+* [Hugging Face API Authentication](#hugging-face-api-authentication)
 
 If these tokens are not properly configured, notebooks that rely on external APIs will not function correctly.
 
-## Kaggle API Setup Instructions
+## Kaggle API Authentication
 
-### Option 1: Using `kaggle.json` File
+### Step 1: Create a Kaggle Account
+* Sign up or log in at [kaggle.com](https://www.kaggle.com/).
 
-1. **Download `kaggle.json` from Kaggle:**
+### Step 2: Generate API Token
+1. Go to Profile → **Account** → **API** → **Create New API Token**.
+2. A `kaggle.json` file will be downloaded.
 
-   - Log in to [kaggle.com](https://www.kaggle.com/).  
-   - Click your profile picture (top right corner) and select **Account** from the dropdown.  
-   - Scroll down to the **API** section.  
-   - Click **Create New API Token**.  
-   - The `kaggle.json` file will be downloaded automatically.
+### Step 3: Configure API Token
 
-2. **Place the `kaggle.json` file:**
+#### Option 1: Using `kaggle.json` File
+1. Move the `kaggle.json` file to the appropriate folder:
+   * Linux/macOS: `~/.kaggle/`
+   * Windows: `%USERPROFILE%\.kaggle\`
+2. Set file permissions (Linux/macOS):
+   ```bash
+   chmod 600 ~/.kaggle/kaggle.json
+   ```
+3. The Kaggle API will detect this file automatically.
 
-   - Move the file to the appropriate folder:  
-     - Linux/macOS: `~/.kaggle/`  
-     - Windows: `%USERPROFILE%\.kaggle\`
-
-   - Set file permissions (Linux/macOS):  
-     ```bash
-     chmod 600 ~/.kaggle/kaggle.json
-     ```
-
-   - The Kaggle API will detect this file automatically when running commands or scripts.
-
-### Option 2: Using Environment Variables with a `.env` File
-
-1. Create a `.env` file in the root of your project directory.
-
-2. Add your Kaggle credentials to the `.env` file:
-
+#### Option 2: Using `.env` File
+1. Create a .env file in the project root.
+2. Add your credentials:
    ```bash
    KAGGLE_USERNAME=your_kaggle_username
    KAGGLE_KEY=your_api_key
    ```
 
-## Hugging Face Token Setup Instructions
+## Hugging Face API Authentication
 
 ### Step 1: Create a Hugging Face Account
-
-* Visit [huggingface.co](https://huggingface.co/) and sign up or log in.
+* Sign up or log in at [huggingface.co](https://huggingface.co/).
 
 ### Step 2: Generate an Access Token
+1. Click your profile icon, **Settings**, **Access Tokens**, **New token**.
+2. Name the token and select the appropriate scope (usually `read`).
+3. Click **Generate** and copy the token (you won’t be able to see it again).
 
-1. Click your profile icon (top right corner) and select **Settings**.  
-2. In the left sidebar, click **Access Tokens**.  
-3. Click **New token**.  
-4. Name your token and select the appropriate scopes (usually `read` is sufficient).  
-5. Click **Generate**.  
-6. Copy the generated token — you won’t be able to see it again.
-
-### Step 3: Set Up Your Token for Use
-
-There are two common ways to configure the Hugging Face token in your environment:
+### Step 3: Configure the Access Token
 
 #### Option 1: Using Environment Variable
+* Linux/macOS:
+  ```bash
+  export HF_TOKEN="your_token_here"
+  ```
+* Windows (PowerShell):
+  ```powershell
+  setx HF_TOKEN "your_token_here"
+  ```
 
-1. Add your token as an environment variable named `HF_TOKEN`.
-
-   - On Linux/macOS:
-     ```bash
-     export HF_TOKEN="your_token_here"
-     ```
-   - On Windows (PowerShell):
-     ```powershell
-     setx HF_TOKEN "your_token_here"
-     ```
-
-#### Option 2: Using a `.env` File
-
-1. Create a `.env` file in your project root directory.  
-2. Add your token to the `.env` file:
+#### Option 2: Using `.env` File
+1. Create a `.env` file in the project root.
+2. Add your token:
    ```ini
    HF_TOKEN=your_token_here
    ```
+
+

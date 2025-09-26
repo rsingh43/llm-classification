@@ -13,11 +13,11 @@
 
 This project explores how large language models (LLMs) can be applied to tabular data classification by first converting each row into a natural language description. The LLM then predicts the class label and generates a plain-language explanation of its decision. This approach is compared with traditional machine learning models, focusing on trade-offs in accuracy and interpretability, with plans to evaluate fairness in future work.
 
-Specifically, this project investigates whether modern LLMs can:  
-* Perform classification from natural language descriptions of rows in tabular data  
-* Provide understandable, human-like rationales for their decisions  
-* Generalize without the need for labeled training data  
-* Compete with classical models in accuracy and robustness  
+Specifically, this project investigates whether modern LLMs can:
+* Perform classification from natural language descriptions of rows in tabular data
+* Provide understandable, human-like rationales for their decisions
+* Generalize without the need for labeled training data
+* Compete with classical models in accuracy and robustness
 
 ## Introduction
 
@@ -66,49 +66,49 @@ The repository is organized into directories and files to support data preparati
 ├── .env
 ├── LICENSE
 ├── README.md
-├── data/
-│   └── GiveMeSomeCredit/
+├── data
+│   └── GiveMeSomeCredit
 │       ├── GiveMeSomeCredit.zip
-│       ├── raw/
-│       └── processed/
-├── notebooks/
-│   ├── 00_data_preparation/
+│       ├── figures
+│       ├── processed
+│       ├── raw
+│       └── results
+├── notebooks
+│   ├── 01_data_preparation
 │   │   ├── 01_download_data.ipynb
-│   │   ├── 02_data_cleaning.ipynb
-│   │   └── 03_llm_preparation.ipynb
-│   ├── 01_exploration/
+│   │   └── 02_data_cleaning.ipynb
+│   ├── 02_exploration
 │   │   └── 01_eda.ipynb
-│   ├── 02_modeling/
+│   ├── 03_modeling
 │   │   ├── 01_logistic_regression.ipynb
 │   │   ├── 02_random_forest.ipynb
 │   │   └── 03_hgb.ipynb
-│   ├── 03_llm_classification/
-│   │   ├── 01_remote_llm_classification.ipynb
+│   ├── 04_llm_classification
+│   │   ├── 01_llm_preparation.ipynb
 │   │   ├── 02_local_llm_classification.ipynb
-│   │   └── 10_collate_and_convert_results.ipynb
-│   └── 04_evaluation/
-│       └── 01_performance_evaluation.ipynb
-└── src/
-    ├── GiveMeSomeCredit.py
-    ├── dataframe_utils.py
-    ├── env_paths.py
-    ├── huggingface_utils.py
-    ├── kaggle_utils.py
-    └── zip_utils.py
+│   │   ├── 03_remote_llm_classification.ipynb
+│   │   ├── 04_collate_and_convert_results.ipynb
+│   │   └── README.md
+│   ├── 05_evaluation
+│   │   ├── 01_performance_evaluation.ipynb
+│   │   └── 02_llm_evaluation.ipynb
+│   └── README.md
+└── src
+    └── llm_classification
+        ├── datasets
+        └── utils
 ```
 
-* `.env` — Environment variables file holding API keys for Hugging Face and Kaggle (**users must create this themselves; see the [README.md](./notebooks/README.md) in [./notebooks](./notebooks) for details**).
-* `LICENSE` — Project license file.  
-* `README.md` — This documentation file.  
-* `data/` — **Not included in the repo**; created by running notebooks in `00_data_preparation`. Contains:  
-  * `GiveMeSomeCredit/raw/` — Original raw Kaggle competition data files.  
-  * `GiveMeSomeCredit/processed/` — All data files generated during this project, such as prompt files, intermediate results, and evaluation outputs.  
-  * `GiveMeSomeCredit/GiveMeSomeCredit.zip` — Compressed dataset archive from Kaggle.  
+* `.env` — Environment variables file holding API keys for Hugging Face and Kaggle (**users must create this themselves; see the [./notebooks/README.md](./notebooks/README.md) for details**).
+* `LICENSE` — Project license file.
+* `README.md` — This documentation file.
+* `data/` — Directory for datasets, results, and analysis outputs.
+  * `GiveMeSomeCredit/` — Workspace for the Kaggle *Give Me Some Credit* dataset and derived files.
 * [`notebooks/`](./notebooks) — Jupyter notebooks organized by project phase:  
-  * [`01_data_preparation/`](./notebooks/01_data_preparation) — Data downloading, cleaning, and preprocessing notebooks.  
-  * [`02_exploration/`](./notebooks/02_exploration) — Exploratory data analysis notebooks.  
-  * [`03_modeling/`](./notebooks/03_modeling) — Baseline traditional model training notebooks (e.g., logistic regression, random forests).  
-  * [`04_llm_classification/`](./notebooks/04_llm_classification) — Notebooks for LLM-based classification experiments.  
-  * [`05_evaluation/`](./notebooks/05_evaluation) — Notebooks focused on performance evaluation and visualization.  
+  * [`01_data_preparation/`](./notebooks/01_data_preparation) — Data downloading, cleaning, and preprocessing notebooks.
+  * [`02_exploration/`](./notebooks/02_exploration) — Exploratory data analysis notebooks.
+  * [`03_modeling/`](./notebooks/03_modeling) — Baseline traditional model training notebooks (e.g., logistic regression, random forests).
+  * [`04_llm_classification/`](./notebooks/04_llm_classification) — Notebooks for LLM-based classification experiments.
+  * [`05_evaluation/`](./notebooks/05_evaluation) — Notebooks focused on performance evaluation and visualization.
 * [`src/`](./src) — Python source code for utility scripts, dataset handling, and core functions.
 
